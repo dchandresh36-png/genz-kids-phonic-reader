@@ -36,12 +36,13 @@ const alphabetColors = [
     '#4ade80', '#34d399', '#2dd4bf', '#38bdf8', '#60a5fa'
 ];
 
-// --- High Quality Speech Synth Controller ---
+// --- High Quality Native System Voice Controller ---
 function speakText(text) {
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
+        window.speechSynthesis.cancel(); // Clears lagging voice tasks instantly
         const utterance = new SpeechSynthesisUtterance(text);
         
+        // Settings for a sweet, friendly kids voice profile
         utterance.rate = 0.85;  
         utterance.pitch = 1.30; 
         utterance.volume = 1.0; 
@@ -75,7 +76,7 @@ function initializeAlphabet() {
 
 function updateProgressBar() {
     if (alphabetList.length === 0) return;
-    const progressPercentage = ((currentTargetIndex) / alphabetList.length) * 100;
+    const progressPercentage = (currentTargetIndex / alphabetList.length) * 100;
     if (progressIndicator) progressIndicator.style.width = progressPercentage + '%';
 }
 
@@ -91,13 +92,14 @@ function loadGamePage() {
     const targetLetter = alphabetList[currentTargetIndex];
     if (gameQuestion) gameQuestion.textContent = "Where is the alphabet " + targetLetter + "?";
     
-    // Only speaks if the audio context has already been activated via interaction
+    // Only speak if the user has unlocked the engine window context
     if (isVoiceEngineUnlocked) {
         speakText("Where is the alphabet " + targetLetter + "?");
     }
 
     if (gridScreen) gridScreen.innerHTML = '';
 
+    // Shuffles array layout elements safely
     let currentChoices = [...alphabetList];
     currentChoices.sort(function() { return 0.5 - Math.random(); });
 
@@ -136,10 +138,10 @@ function selectLetterCard(letter) {
     speakText("Correct! " + letter + " is for " + data.word);
 }
 
-// --- Interaction Element Triggers ---
+// --- Dynamic Input Handlers ---
 if (startBtn) {
     startBtn.addEventListener('click', function() {
-        forceUnlockMobileAudio(); // Secure permission loop instantly
+        forceUnlockMobileAudio(); // Clears user gesture rule instantly
         currentTargetIndex = 0; 
         initializeAlphabet(); 
         if (welcomeScreen) welcomeScreen.classList.add('hidden');
@@ -148,7 +150,8 @@ if (startBtn) {
         if (gridScreen) gridScreen.classList.remove('hidden');
         
         loadGamePage();
-        // Read clearly now that user action context is validated
+        
+        // Speaks right after user enters the main screen
         const targetLetter = alphabetList[currentTargetIndex];
         speakText("Where is the alphabet " + targetLetter + "?");
     });
