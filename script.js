@@ -1,36 +1,33 @@
-// ==========================================
-// 1. GAME DATA (WORDS & QUESTIONS)
-// ==========================================
+// Alphabet dataset structure matching your game requirements
 const phonicsData = [
-    { word: "CAT", choices: ["A", "CAT", "D"] },
-    { word: "DOG", choices: ["DOG", "O", "G"] },
-    { word: "SUN", choices: ["S", "U", "SUN"] },
-    { word: "BALL", choices: ["B", "BALL", "L"] },
-    { word: "BAT", choices: ["BAT", "A", "T"] }
+    { word: "A", choices: ["B", "A", "F"] },
+    { word: "B", choices: ["B", "E", "M"] },
+    { word: "C", choices: ["S", "O", "C"] },
+    { word: "D", choices: ["D", "P", "Q"] },
+    { word: "E", choices: ["X", "E", "Z"] }
 ];
 
 let currentQuestionIndex = 0;
 let isVoiceEngineUnlocked = false;
 
-// ==========================================
-// 2. VOICE ENGINE FUNCTIONS
-// ==========================================
+// Custom mobile-ready sound speaker
 function speakWord(text) {
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop any overlapping voices
-
+        window.speechSynthesis.cancel(); // Stops previous track from jamming up
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Clear child-style tablet reading configuration
+        // Fine-tuned settings for clean, high-quality kids sound profile
         utterance.rate = 0.85;  
-        utterance.pitch = 1.25; 
+        utterance.pitch = 1.30; 
         utterance.volume = 1.0; 
 
+        // Pulls highest fidelity audio engine available on current device
         const voices = window.speechSynthesis.getVoices();
         const sweetVoice = voices.find(voice => 
-            voice.name.includes('Google') || 
             voice.name.includes('Natural') || 
-            voice.name.includes('Zira')
+            voice.name.includes('Google') || 
+            voice.name.includes('Zira') ||
+            voice.name.includes('en-US')
         );
         
         if (sweetVoice) {
@@ -41,6 +38,7 @@ function speakWord(text) {
     }
 }
 
+// Activates background permission for mobile audio engines during user click events
 function forceUnlockMobileAudio() {
     if (!isVoiceEngineUnlocked) {
         const silentSpeech = new SpeechSynthesisUtterance('');
@@ -49,30 +47,23 @@ function forceUnlockMobileAudio() {
     }
 }
 
-// ==========================================
-// 3. CORE GAME LOGIC
-// ==========================================
+// Updates display fields and loads content text cleanly
 function loadQuestion() {
     const currentData = phonicsData[currentQuestionIndex];
-    
-    // Set visual layout word text
     document.getElementById('word-display').textContent = currentData.word;
     
-    // Setup option choices on target buttons
-    currentData.choices.forEach((choice, index) => {
-        const button = document.getElementById(`btn-${index}`);
+    for (let i = 0; i < 3; i++) {
+        const button = document.getElementById(`btn-${i}`);
         if (button) {
-            button.textContent = choice;
-            button.className = "choice-btn"; // Clears color tracking classes
+            button.textContent = currentData.choices[i];
+            button.className = "choice-btn"; // Wipes old validation feedback indicators
         }
-    });
-
-    // Try reading layout automatically
-    speakWord(`Can you find the word ${currentData.word}?`);
+    }
+    speakWord(currentData.word);
 }
 
+// Action routing based on target button clicked
 function handleChoiceClick(index) {
-    // Instantly unlock voice on APK mobile wrapper
     forceUnlockMobileAudio();
 
     const currentData = phonicsData[currentQuestionIndex];
@@ -81,45 +72,36 @@ function handleChoiceClick(index) {
 
     if (choiceText === currentData.word) {
         selectedButton.classList.add('correct');
-        speakWord("Great job! That is correct!");
-
-        // Loop forward after 2 second pause
+        
         setTimeout(() => {
             currentQuestionIndex++;
             if (currentQuestionIndex < phonicsData.length) {
                 loadQuestion();
             } else {
-                speakWord("You completed the game! Let's play again!");
-                currentQuestionIndex = 0;
+                currentQuestionIndex = 0; // loops back to beginning seamlessly
                 loadQuestion();
             }
-        }, 2000);
-
+        }, 1200);
     } else {
         selectedButton.classList.add('incorrect');
-        speakWord("Oops! Try again!");
     }
 }
 
-// ==========================================
-// 4. INITIALIZE APP AND LISTENERS
-// ==========================================
-window.addEventListener('DOMContentLoaded', () => {
-    // Attach click triggers directly to buttons to bypass APK inline restrictions
+// Hooks listeners into buttons programmatically to remain compliant with older webviews
+document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < 3; i++) {
         const button = document.getElementById(`btn-${i}`);
         if (button) {
             button.addEventListener('click', () => handleChoiceClick(i));
         }
     }
-
-    loadQuestion();
     
+    loadQuestion();
+
+    // Safe fallback initialization routine for slower tablet speech platforms
     if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = () => {
-            if (currentQuestionIndex === 0) {
-                loadQuestion();
-            }
+            loadQuestion();
         };
     }
 });
