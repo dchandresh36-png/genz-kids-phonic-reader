@@ -17,17 +17,15 @@ let isVoiceEngineUnlocked = false;
 // ==========================================
 function speakWord(text) {
     if ('speechSynthesis' in window) {
-        // Stop any current speech before talking
-        window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel(); // Stop any overlapping voices
 
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Sweet, clear tablet configurations
+        // Clear child-style tablet reading configuration
         utterance.rate = 0.85;  
         utterance.pitch = 1.25; 
         utterance.volume = 1.0; 
 
-        // Match clean system voice
         const voices = window.speechSynthesis.getVoices();
         const sweetVoice = voices.find(voice => 
             voice.name.includes('Google') || 
@@ -43,7 +41,6 @@ function speakWord(text) {
     }
 }
 
-// Helper to safely unlock Android/iOS audio context
 function forceUnlockMobileAudio() {
     if (!isVoiceEngineUnlocked) {
         const silentSpeech = new SpeechSynthesisUtterance('');
@@ -61,33 +58,30 @@ function loadQuestion() {
     // Set visual layout word text
     document.getElementById('word-display').textContent = currentData.word;
     
-    // Setup option choices on target elements
-    const buttons = document.querySelectorAll('.choice-btn');
-    buttons.forEach((button, index) => {
-        button.textContent = currentData.choices[index];
-        button.className = "choice-btn"; // Clears color tracking classes
+    // Setup option choices on target buttons
+    currentData.choices.forEach((choice, index) => {
+        const button = document.getElementById(`btn-${index}`);
+        if (button) {
+            button.textContent = choice;
+            button.className = "choice-btn"; // Clears color tracking classes
+        }
     });
 
-    // Try reading layout automatically (Works perfectly post-unlock click)
+    // Try reading layout automatically
     speakWord(`Can you find the word ${currentData.word}?`);
 }
 
-// Master execution route for interface button taps
-function handleChoiceClick(selectedButton) {
-    // 1. Instantly trip the APK system engine to let speech bypass restrictions
+function handleChoiceClick(index) {
+    // Instantly unlock voice on APK mobile wrapper
     forceUnlockMobileAudio();
 
-    const choiceText = selectedButton.textContent;
     const currentData = phonicsData[currentQuestionIndex];
+    const selectedButton = document.getElementById(`btn-${index}`);
+    const choiceText = selectedButton.textContent;
 
     if (choiceText === currentData.word) {
-        // Correct Action
         selectedButton.classList.add('correct');
         speakWord("Great job! That is correct!");
-        
-        if (typeof confetti === 'function') {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-        }
 
         // Loop forward after 2 second pause
         setTimeout(() => {
@@ -102,16 +96,23 @@ function handleChoiceClick(selectedButton) {
         }, 2000);
 
     } else {
-        // Incorrect Action
         selectedButton.classList.add('incorrect');
         speakWord("Oops! Try again!");
     }
 }
 
 // ==========================================
-// 4. INITIALIZE ENTRY
+// 4. INITIALIZE APP AND LISTENERS
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
+    // Attach click triggers directly to buttons to bypass APK inline restrictions
+    for (let i = 0; i < 3; i++) {
+        const button = document.getElementById(`btn-${i}`);
+        if (button) {
+            button.addEventListener('click', () => handleChoiceClick(i));
+        }
+    }
+
     loadQuestion();
     
     if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
