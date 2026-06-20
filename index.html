@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GenZ Kids Phonic Reader</title>
     <style>
-        /* Basic clean fallback styling to make sure everything looks right */
+        /* Your original game styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f8ff;
@@ -65,12 +65,98 @@
         </div>
 
         <div class="choices-container">
-            <button class="choice-btn" id="btn-0">A</button>
-            <button class="choice-btn" id="btn-1">B</button>
-            <button class="choice-btn" id="btn-2">C</button>
+            <button class="choice-btn" id="btn-0"></button>
+            <button class="choice-btn" id="btn-1"></button>
+            <button class="choice-btn" id="btn-2"></button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Game Data
+        const phonicsData = [
+            { word: "CAT", choices: ["A", "CAT", "D"] },
+            { word: "DOG", choices: ["DOG", "O", "G"] },
+            { word: "SUN", choices: ["S", "U", "SUN"] },
+            { word: "BALL", choices: ["B", "BALL", "L"] },
+            { word: "BAT", choices: ["BAT", "A", "T"] }
+        ];
+
+        let currentQuestionIndex = 0;
+        let isVoiceEngineUnlocked = false;
+
+        function speakWord(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Normal plain reading settings
+                utterance.rate = 1.0;  
+                utterance.pitch = 1.0; 
+                utterance.volume = 1.0; 
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function forceUnlockMobileAudio() {
+            if (!isVoiceEngineUnlocked) {
+                const silentSpeech = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(silentSpeech);
+                isVoiceEngineUnlocked = true;
+            }
+        }
+
+        function loadQuestion() {
+            const currentData = phonicsData[currentQuestionIndex];
+            document.getElementById('word-display').textContent = currentData.word;
+            
+            for (let i = 0; i < 3; i++) {
+                const button = document.getElementById(`btn-${i}`);
+                if (button) {
+                    button.textContent = currentData.choices[i];
+                    button.className = "choice-btn"; 
+                }
+            }
+
+            // Just says the simple text like the original code did
+            speakWord(currentData.word);
+        }
+
+        function handleChoiceClick(index) {
+            forceUnlockMobileAudio();
+
+            const currentData = phonicsData[currentQuestionIndex];
+            const selectedButton = document.getElementById(`btn-${index}`);
+            const choiceText = selectedButton.textContent;
+
+            if (choiceText === currentData.word) {
+                selectedButton.classList.add('correct');
+                speakWord("Correct");
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < phonicsData.length) {
+                        loadQuestion();
+                    } else {
+                        currentQuestionIndex = 0;
+                        loadQuestion();
+                    }
+                }, 1500);
+            } else {
+                selectedButton.classList.add('incorrect');
+                speakWord("Wrong");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            for (let i = 0; i < 3; i++) {
+                const button = document.getElementById(`btn-${i}`);
+                if (button) {
+                    button.addEventListener('click', () => handleChoiceClick(i));
+                }
+            }
+            loadQuestion();
+        });
+    </script>
 </body>
 </html>
