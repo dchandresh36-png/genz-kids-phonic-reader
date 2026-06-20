@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GenZ Kids Phonic Reader</title>
     <style>
-        /* Your original game styling */
+        /* Your original simple layout styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f8ff;
@@ -22,11 +22,12 @@
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            min-width: 320px;
         }
         .word-box h1 {
-            font-size: 4rem;
+            font-size: 6rem; /* Large size perfect for single alphabets */
             color: #333;
-            margin-bottom: 30px;
+            margin: 0 0 30px 0;
             letter-spacing: 5px;
         }
         .choices-container {
@@ -35,25 +36,25 @@
             justify-content: center;
         }
         .choice-btn {
-            font-size: 2rem;
+            font-size: 2.5rem;
             padding: 15px 30px;
             border: 3px solid #008cba;
             background-color: white;
             color: #008cba;
             border-radius: 10px;
             cursor: pointer;
-            min-width: 100px;
+            min-width: 90px;
             transition: all 0.2s ease;
         }
         .choice-btn.correct {
-            background-color: #4caf50;
-            color: white;
-            border-color: #4caf50;
+            background-color: #4caf50 !important;
+            color: white !important;
+            border-color: #4caf50 !important;
         }
         .choice-btn.incorrect {
-            background-color: #f44336;
-            color: white;
-            border-color: #f44336;
+            background-color: #f44336 !important;
+            color: white !important;
+            border-color: #f44336 !important;
         }
     </style>
 </head>
@@ -61,7 +62,7 @@
 
     <div class="game-container">
         <div class="word-box">
-            <h1 id="word-display">START</h1>
+            <h1 id="word-display">A</h1>
         </div>
 
         <div class="choices-container">
@@ -72,32 +73,47 @@
     </div>
 
     <script>
-        // Game Data
+        // Alphabet dataset structure matching your game requirements
         const phonicsData = [
-            { word: "CAT", choices: ["A", "CAT", "D"] },
-            { word: "DOG", choices: ["DOG", "O", "G"] },
-            { word: "SUN", choices: ["S", "U", "SUN"] },
-            { word: "BALL", choices: ["B", "BALL", "L"] },
-            { word: "BAT", choices: ["BAT", "A", "T"] }
+            { word: "A", choices: ["B", "A", "F"] },
+            { word: "B", choices: ["B", "E", "M"] },
+            { word: "C", choices: ["S", "O", "C"] },
+            { word: "D", choices: ["D", "P", "Q"] },
+            { word: "E", choices: ["X", "E", "Z"] }
         ];
 
         let currentQuestionIndex = 0;
         let isVoiceEngineUnlocked = false;
 
+        // Custom mobile-ready sound speaker
         function speakWord(text) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+                window.speechSynthesis.cancel(); // Stops previous track from jamming up
                 const utterance = new SpeechSynthesisUtterance(text);
                 
-                // Normal plain reading settings
-                utterance.rate = 1.0;  
-                utterance.pitch = 1.0; 
+                // Fine-tuned settings for clean, high-quality kids sound profile
+                utterance.rate = 0.85;  
+                utterance.pitch = 1.30; 
                 utterance.volume = 1.0; 
+
+                // Pulls highest fidelity audio engine available on current device
+                const voices = window.speechSynthesis.getVoices();
+                const sweetVoice = voices.find(voice => 
+                    voice.name.includes('Natural') || 
+                    voice.name.includes('Google') || 
+                    voice.name.includes('Zira') ||
+                    voice.name.includes('en-US')
+                );
+                
+                if (sweetVoice) {
+                    utterance.voice = sweetVoice;
+                }
 
                 window.speechSynthesis.speak(utterance);
             }
         }
 
+        // Activates background permission for mobile audio engines during user click events
         function forceUnlockMobileAudio() {
             if (!isVoiceEngineUnlocked) {
                 const silentSpeech = new SpeechSynthesisUtterance('');
@@ -106,6 +122,7 @@
             }
         }
 
+        // Updates display fields and loads content text cleanly
         function loadQuestion() {
             const currentData = phonicsData[currentQuestionIndex];
             document.getElementById('word-display').textContent = currentData.word;
@@ -114,14 +131,13 @@
                 const button = document.getElementById(`btn-${i}`);
                 if (button) {
                     button.textContent = currentData.choices[i];
-                    button.className = "choice-btn"; 
+                    button.className = "choice-btn"; // Wipes old validation feedback indicators
                 }
             }
-
-            // Just says the simple text like the original code did
             speakWord(currentData.word);
         }
 
+        // Action routing based on target button clicked
         function handleChoiceClick(index) {
             forceUnlockMobileAudio();
 
@@ -131,23 +147,22 @@
 
             if (choiceText === currentData.word) {
                 selectedButton.classList.add('correct');
-                speakWord("Correct");
-
+                
                 setTimeout(() => {
                     currentQuestionIndex++;
                     if (currentQuestionIndex < phonicsData.length) {
                         loadQuestion();
                     } else {
-                        currentQuestionIndex = 0;
+                        currentQuestionIndex = 0; // loops back to beginning seamlessly
                         loadQuestion();
                     }
-                }, 1500);
+                }, 1200);
             } else {
                 selectedButton.classList.add('incorrect');
-                speakWord("Wrong");
             }
         }
 
+        // Hooks listeners into buttons programmatically to remain compliant with older webviews
         document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < 3; i++) {
                 const button = document.getElementById(`btn-${i}`);
@@ -155,7 +170,15 @@
                     button.addEventListener('click', () => handleChoiceClick(i));
                 }
             }
+            
             loadQuestion();
+
+            // Safe fallback initialization routine for slower tablet speech platforms
+            if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    loadQuestion();
+                };
+            }
         });
     </script>
 </body>
