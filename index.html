@@ -4,8 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GenZ Kids Phonic Reader</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Basic clean fallback styling to make sure everything looks right */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .game-container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .word-box h1 {
+            font-size: 4rem;
+            color: #333;
+            margin-bottom: 30px;
+            letter-spacing: 5px;
+        }
+        .choices-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .choice-btn {
+            font-size: 2rem;
+            padding: 15px 30px;
+            border: 3px solid #008cba;
+            background-color: white;
+            color: #008cba;
+            border-radius: 10px;
+            cursor: pointer;
+            min-width: 100px;
+            transition: all 0.2s ease;
+        }
+        .choice-btn.correct {
+            background-color: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+        .choice-btn.incorrect {
+            background-color: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+    </style>
 </head>
 <body>
 
@@ -15,9 +65,9 @@
         </div>
 
         <div class="choices-container">
-            <button class="choice-btn" onclick="handleChoiceClick(this)"></button>
-            <button class="choice-btn" onclick="handleChoiceClick(this)"></button>
-            <button class="choice-btn" onclick="handleChoiceClick(this)"></button>
+            <button class="choice-btn" id="btn-0">A</button>
+            <button class="choice-btn" id="btn-1">B</button>
+            <button class="choice-btn" id="btn-2">C</button>
         </div>
     </div>
 
